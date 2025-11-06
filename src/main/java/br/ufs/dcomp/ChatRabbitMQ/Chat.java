@@ -29,8 +29,8 @@ public class Chat {
     ConnectionFactory factory = new ConnectionFactory();
     
     factory.setHost("3.229.56.253");  // IP do RabbitMq Docker!
-    factory.setUsername("coelhOS");  // Alterar nome
-    factory.setPassword("senha");  // Alterar
+    factory.setUsername("coelhOS");   // Alterar nome
+    factory.setPassword("senha");     // Alterar
     factory.setVirtualHost("/");
     
     System.out.println("usuario e senha");

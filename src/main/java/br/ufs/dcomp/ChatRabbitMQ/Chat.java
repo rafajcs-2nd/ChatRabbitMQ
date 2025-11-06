@@ -4,21 +4,85 @@ import com.rabbitmq.client.*;
 
 import java.io.IOException;
 
+import java.util.Scanner;
+
 public class Chat {
+  
+  /*
+  private static void   criaFila(Channel channel) throws IOException {
+    Scanner scanner = new Scanner(System.in);
+    
+    System.out.print("User: ");
+    
+    String nome_usuario = scanner.nextLine();
+    
+    channel.queueDeclare(nome_usuario, false,   false,     false,       null);
+
+    scanner.close();
+    
+  }
+  */
 
   public static void main(String[] argv) throws Exception {
+    System.out.println("Iniciou!");
+    
     ConnectionFactory factory = new ConnectionFactory();
     
-    factory.setHost("3.85.93.173");         // IP do RabbitMq Docker!
-    factory.setUsername("admin");            // Alterar nome
-    factory.setPassword("senha");        // Alterar
+    factory.setHost("3.229.56.253");  // IP do RabbitMq Docker!
+    factory.setUsername("coelhOS");  // Alterar nome
+    factory.setPassword("senha");  // Alterar
     factory.setVirtualHost("/");
+    
+    System.out.println("usuario e senha");
+  
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
+
+    System.out.println("conexao ok");
     
+    // Declara o exchange principal para mensagens entre usuários
+    channel.exchangeDeclare("usuarios_direct", "direct", true);
+
+    System.out.print("User: ");
+    
+    // Le o nome do usuario e cria um fila para ele
+    Scanner scanner = new Scanner(System.in);
+    String nome_usuario = scanner.nextLine();
+    
+    channel.queueDeclare(nome_usuario, false,   false,     false,       null);
+    
+    // Vincula a fila ao exchange criado
+    channel.queueBind(nome_usuario, "usuarios_direct", nome_usuario);
+
+    String destinatario = "";
+    System.out.println("vai entrar no loop");
+  
+    while (true) {
+
+      System.out.print(destinatario + "<< ");
+      String comando = scanner.nextLine();
+      
+      if (comando == "exit") break;
+
+      if(comando.charAt(0) == '@') {
+        destinatario = comando;
+  
+      }
+      else {
+        String mensagem = scanner.nextLine();
+        // Publica a mensagem no exchage com a chave de rota destinatário
+        channel.basicPublish("usuarios_direct", destinatario, null, mensagem.getBytes("UTF-8"));
+        System.out.println("mensagem enviada!");
+        continue;
+      }
+      
+      
+    }
+    
+    /*
     String QUEUE_NAME = "minha-fila";
     
-                      //(queue-name, durable, exclusive, auto-delete, params); 
+    //(queue-name, durable, exclusive, auto-delete, params); 
     channel.queueDeclare(QUEUE_NAME, false,   false,     false,       null);
     
     Consumer consumer = new DefaultConsumer(channel) {
@@ -29,8 +93,10 @@ public class Chat {
 
       }
     };
-                      //(queue-name, autoAck, consumer);    
-    channel.basicConsume(QUEUE_NAME, true,    consumer);
     
+    //(queue-name, autoAck, consumer);    
+    channel.basicConsume(QUEUE_NAME, true,    consumer);
+    */
+    scanner.close();    
   }
 }

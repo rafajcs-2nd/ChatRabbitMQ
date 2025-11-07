@@ -4,7 +4,10 @@ import com.rabbitmq.client.*;
 
 import java.io.IOException;
 
-import java.util.Scanner;
+
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 
 public class Chat {
   
@@ -24,7 +27,7 @@ public class Chat {
   */
 
   public static void main(String[] argv) throws Exception {
-    System.out.println("Iniciou!");
+    //System.out.println("Iniciou!");
     
     ConnectionFactory factory = new ConnectionFactory();
     
@@ -33,12 +36,12 @@ public class Chat {
     factory.setPassword("senha");     // Alterar
     factory.setVirtualHost("/");
     
-    System.out.println("usuario e senha");
+    //System.out.println("usuario e senha");
   
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
 
-    System.out.println("conexao ok");
+    //System.out.println("conexao ok");
     
     // Declara o exchange principal para mensagens entre usuários
     channel.exchangeDeclare("usuarios_direct", "direct", true);
@@ -46,8 +49,9 @@ public class Chat {
     System.out.print("User: ");
     
     // Le o nome do usuario e cria um fila para ele
-    Scanner scanner = new Scanner(System.in);
-    String nome_usuario = scanner.nextLine();
+    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    String nome_usuario = reader.readLine();
+
     
     channel.queueDeclare(nome_usuario, false,   false,     false,       null);
     
@@ -55,24 +59,24 @@ public class Chat {
     channel.queueBind(nome_usuario, "usuarios_direct", nome_usuario);
 
     String destinatario = "";
-    System.out.println("vai entrar no loop");
-  
+
     while (true) {
 
       System.out.print(destinatario + "<< ");
-      String comando = scanner.nextLine();
-      
-      if (comando == "exit") break;
+      String comando = reader.readLine();
+
+      if(comando.isEmpty()) {
+        continue;
+      }
 
       if(comando.charAt(0) == '@') {
         destinatario = comando;
   
       }
       else {
-        String mensagem = scanner.nextLine();
+        String mensagem = comando;
         // Publica a mensagem no exchage com a chave de rota destinatário
         channel.basicPublish("usuarios_direct", destinatario, null, mensagem.getBytes("UTF-8"));
-        System.out.println("mensagem enviada!");
         continue;
       }
       
@@ -97,6 +101,5 @@ public class Chat {
     //(queue-name, autoAck, consumer);    
     channel.basicConsume(QUEUE_NAME, true,    consumer);
     */
-    scanner.close();    
   }
 }

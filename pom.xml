@@ -14,7 +14,7 @@
           <archive>
             <manifest>
               <mainClass>
-                br.ufs.dcomp.ChatRabbitMQ.emissor
+                br.ufs.dcomp.ChatRabbitMQ.parser
               </mainClass>
             </manifest>
           </archive>

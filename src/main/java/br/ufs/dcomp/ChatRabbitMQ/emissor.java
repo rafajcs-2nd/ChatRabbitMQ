@@ -45,8 +45,20 @@ public class emissor {
 
         if (comando.charAt(0) == '@') {
             destinatario = comando.substring(1); // Remove o '@'
-        } else if (comando.equalsIgnoreCase("/sair")) {
+        }
+        else if (comando.charAt(0) == '!') {
+            String[] tokens = comando.split(" ");
+            
+            String usuario = tokens[1];
+            String grupo = tokens[2];
+            
+            
+        }
+            
+        else if (comando.equalsIgnoreCase("/sair")) {
             break;
+        
+            
         } else {
             if (!destinatario.isEmpty()) {
                 String mensagem = comando;

@@ -4,12 +4,12 @@ import com.rabbitmq.client.*;
 
 import java.io.IOException;
 
-public class Receptor {
+public class Receptor2 {
 
  private static final String EXCHANGE_NAME = "usuarios_direct";
  private final Connection connection;
  
- public Receptor(Connection connection){
+ public Receptor2(Connection connection){
      this.connection = connection;
  }
  

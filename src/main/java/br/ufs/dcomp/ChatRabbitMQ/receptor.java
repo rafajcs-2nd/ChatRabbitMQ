@@ -37,12 +37,12 @@ public class receptor {
                                AMQP.BasicProperties properties, byte[] body) throws IOException {
         
         String mensagem = new String(body, "UTF-8");
-        String remetente = envelope.getRoutingKey();
+        //String remetente = envelope.getRoutingKey();
         
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy 'às' HH:mm");
         String dataHora = sdf.format(new Date());
         
-        System.out.println("(" + dataHora + ") @" + remetente + " diz: " + mensagem);
+        System.out.println("(" + dataHora + ") @" + mensagem);
       }
     };
 

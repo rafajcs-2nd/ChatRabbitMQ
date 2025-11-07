@@ -8,7 +8,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
 public class emissor {
-    //String meuUsuario = "";
   
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
@@ -27,7 +26,7 @@ public class emissor {
     
     System.out.print("User: ");
     
-    String meuUsuario = reader.readLine();
+    String meusuario = reader.readLine();
 
     String destinatario = "";
 
@@ -51,8 +50,10 @@ public class emissor {
         } else {
             if (!destinatario.isEmpty()) {
                 String mensagem = comando;
+                String mensagemCompleta = meusuario + " diz: " + mensagem;
+        
                 // Publica a mensagem no exchange com routing key = destinatário
-                channel.basicPublish("usuarios_direct", destinatario, null, mensagem.getBytes("UTF-8"));
+                channel.basicPublish("usuarios_direct", destinatario, null, mensagemCompleta.getBytes("UTF-8"));
             } else {
                 System.out.println("Primeiro defina um destinatário com @usuario");
             }

@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package ExemploProtocolBuffers; //pasta alterar!
+package ChatRabbitMQ; //pasta alterar!
 
-option java_package = "br.ufs.dcomp.ExemploProtocolBuffers";  //caminho do arquivo - alterar!
+option java_package = "br.ufs.dcomp.ChatRabbitMQ";  //caminho do arquivo - alterar!
 option java_outer_classname = "MensagemProto";
 
 message Mensagem{

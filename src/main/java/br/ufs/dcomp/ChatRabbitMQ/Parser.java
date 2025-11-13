@@ -7,7 +7,7 @@ import com.rabbitmq.client.Channel;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
-public class parser {
+public class Parser {
   
   public static void main(String[] argv) throws Exception {
     String baitola = "!addGroup amigos";

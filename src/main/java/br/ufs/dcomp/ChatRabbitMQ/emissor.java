@@ -7,6 +7,9 @@ import com.rabbitmq.client.Channel;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+
 public class emissor {
   
   public static void main(String[] argv) throws Exception {
@@ -24,42 +27,34 @@ public class emissor {
 
     BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
     
-    System.out.print("User: ");
+    Deque<String> pilha_de_requisicoes = new ArrayDeque<>();
     
+    // Empilha os elementos
+    pilha_de_requisicoes.push("");
+    
+    
+    System.out.print("User: ");
     String meusuario = reader.readLine();
-
     String destinatario = "";
+    String comando_formatado = "";
 
     while (true) {
-        if (!destinatario.isEmpty()) {
-            System.out.print("@" + destinatario + ">> ");
-        } else {
-            System.out.print(">> ");
-        }
+    
+        // Pega a ultima requisição da pilha
+        System.out.print(pilha_de_requisicoes.peek() + ">> ");
         
+        // Lê o comando do usuário
         String comando = reader.readLine();
-
+        
+        // Caso o comando seja vazio
         if (comando == null || comando.isEmpty()) {
             continue;
         }
-
+        
+        // Quando o primeiro char é um @, deve  
         if (comando.charAt(0) == '@') {
             destinatario = comando.substring(1); // Remove o '@'
-        }
-        else if (comando.charAt(0) == '!') {
-            String[] tokens = comando.split(" ");
-            
-            String usuario = tokens[1];
-            String grupo = tokens[2];
-            
-            
-        }
-            
-        else if (comando.equalsIgnoreCase("/sair")) {
-            break;
-        
-            
-        } else {
+                
             if (!destinatario.isEmpty()) {
                 String mensagem = comando;
                 String mensagemCompleta = meusuario + " diz: " + mensagem;
@@ -69,6 +64,28 @@ public class emissor {
             } else {
                 System.out.println("Primeiro defina um destinatário com @usuario");
             }
+        }
+        
+        // Quando o primeiro char é uma interrogação !, deve-se criar um grupo
+        else if (comando.charAt(0) == '!') {
+            String[] tokens = comando.split(" ");
+            
+            String addGroup = tokens[0];
+            String usuario = tokens[1];
+            String grupo = tokens[2];
+            
+            // Cria um grupo
+            
+        }
+        
+        // Quando o primeiro char é uma interrogação !, deve-se criar um grupo
+        else if (comando.charAt(0) == '#') {
+            String grupo = comando.substring(1);
+            // Se conecta ao grupo
+        }
+            
+        else if (comando.equalsIgnoreCase("/sair")) {
+            break;
         }
     }
 

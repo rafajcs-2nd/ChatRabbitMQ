@@ -37,6 +37,8 @@ public class emissor {
     System.out.print("User: ");
     String meusuario = reader.readLine();
     String destinatario = "";
+    String grupo = "";
+    String msg = "";
 
     while (true) {
     
@@ -53,20 +55,9 @@ public class emissor {
         
         // Quando o primeiro char é um @, deve  
         if (comando.charAt(0) == '@') {
+            // Define o destinatario
             destinatario = comando.substring(1); // Remove o '@'
-                
-            if (!destinatario.isEmpty()) {
-                String mensagem = comando;
-                String mensagemCompleta = meusuario + " diz: " + mensagem;
-        
-                // Publica a mensagem no exchange com routing key = destinatário
-                channel.basicPublish("usuarios_direct", destinatario, null, mensagemCompleta.getBytes("UTF-8"));
-                pilha_de_requisicoes.push(comando);
-                continue;
-            } else {
-                System.out.println("Primeiro defina um destinatário com @usuario");
-                continue;
-            }
+            pilha_de_requisicoes.push(("@"+destinatario));
         }
         
         // Quando o primeiro char é uma interrogação !, deve-se criar um grupo
@@ -74,14 +65,19 @@ public class emissor {
             System.out.println("vai criar um grupo");
             String[] tokens = comando.split(" ");
             
-            String addGroup = tokens[0];
-            String grupo = tokens[1];
-            
-            System.out.println("addGroup: " + addGroup +" grupo: "+ grupo);
-            
-            channel.exchangeDeclare(grupo, "fanout", true);
-            
-            System.out.println("Grupo criado: " + grupo);
+            if(tokens[0].equalsIgnoreCase("!addGroup")) {
+                String addGroup = tokens[0];
+                grupo = tokens[1];
+                
+                System.out.println("addGroup: " + addGroup +" grupo: "+ grupo);
+                
+                channel.exchangeDeclare(grupo, "fanout", true);
+                
+                System.out.println("Grupo criado: " + grupo);
+            }
+            else {
+                channel.basicPublish("usuarios_direct", tokens[1], null, comando.getBytes("UTF-8"));
+            }
         }
         
          // Quando o primeiro char é um sustenido #, deve-se conectar a um grupo
@@ -90,18 +86,37 @@ public class emissor {
             
         
             String[] partes = restoEntrada.split(" ", 2);
-            String grupo = partes[0];
+            grupo = partes[0];
             String mensagem = (partes.length > 1) ? partes[1] : "";
 
-            String msg = meusuario + "#" + grupo +  " diz: " + mensagem;
-    
-            channel.basicPublish(grupo, "", null, msg.getBytes("UTF-8"));
+            msg = meusuario + "#" + grupo +  " diz: " + mensagem;
             pilha_de_requisicoes.push(("#"+grupo));
     
         }
             
         else if (comando.equalsIgnoreCase("/sair")) {
             break;
+        }
+        
+        // Se o usuario não digitou nenhum comando, começamos a logica 
+        else {
+            if(pilha_de_requisicoes.peek().charAt(0) == '@') {
+                if (!destinatario.isEmpty()) {
+                    String mensagem = comando;
+                    String mensagemCompleta = meusuario + " diz: " + mensagem;
+            
+                    // Publica a mensagem no exchange com routing key = destinatário
+                    channel.basicPublish("usuarios_direct", destinatario, null, mensagemCompleta.getBytes("UTF-8"));
+                    pilha_de_requisicoes.push(comando);
+                    continue;
+                } else {
+                    System.out.println("Primeiro defina um destinatário com @usuario");
+                    continue;
+                }                
+            }
+            else if(pilha_de_requisicoes.peek().charAt(0) == '#') {
+                channel.basicPublish(grupo, "", null, msg.getBytes("UTF-8"));
+            }
         }
        
     }

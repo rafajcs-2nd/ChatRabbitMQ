@@ -74,22 +74,31 @@ public class emissor {
             String usuario = tokens[1];
             String grupo = tokens[2];
             
-            // Cria um grupo
-            
+            channel.exchangeDeclare(grupo, "fanout", true);
+            System.out.println("Grupo criado: " + grupo);
+            // Cria um grup
         }
         
-        // Quando o primeiro char é uma interrogação !, deve-se criar um grupo
+         // Quando o primeiro char é um sustenido #, deve-se conectar a um grupo
         else if (comando.charAt(0) == '#') {
-            String grupo = comando.substring(1);
+            String restoEntrada = comando.substring(1).trim(); // remove o #
+            
+        
+            String[] partes = restoEntrada.split(" ", 2);
+            String grupo = partes[0];
+            String mensagem = (partes.length > 1) ? partes[1] : "";
+
+            String msg = meusuario + "#" + grupo +  " diz: " + mensagem;
+            channel.basicPublish(grupo, "", null, msg.getBytes("UTF-8"));
             // Se conecta ao grupo
         }
             
         else if (comando.equalsIgnoreCase("/sair")) {
             break;
         }
+       
     }
 
-    // Limpeza
     channel.close();
     connection.close();
     reader.close();

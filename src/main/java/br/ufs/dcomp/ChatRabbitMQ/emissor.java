@@ -14,13 +14,14 @@ public class emissor {
   
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("3.229.56.253");
+    factory.setHost("54.146.215.199");
     factory.setUsername("coelhOS");
     factory.setPassword("senha");
     factory.setVirtualHost("/");
   
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
+    System.out.println("conecta ao rebbitMQ");
 
     // Declara o exchange (deve ser o mesmo do receiver)
     channel.exchangeDeclare("usuarios_direct", "direct", true);
@@ -36,7 +37,6 @@ public class emissor {
     System.out.print("User: ");
     String meusuario = reader.readLine();
     String destinatario = "";
-    String comando_formatado = "";
 
     while (true) {
     
@@ -61,22 +61,27 @@ public class emissor {
         
                 // Publica a mensagem no exchange com routing key = destinatário
                 channel.basicPublish("usuarios_direct", destinatario, null, mensagemCompleta.getBytes("UTF-8"));
+                pilha_de_requisicoes.push(comando);
+                continue;
             } else {
                 System.out.println("Primeiro defina um destinatário com @usuario");
+                continue;
             }
         }
         
         // Quando o primeiro char é uma interrogação !, deve-se criar um grupo
         else if (comando.charAt(0) == '!') {
+            System.out.println("vai criar um grupo");
             String[] tokens = comando.split(" ");
             
             String addGroup = tokens[0];
-            String usuario = tokens[1];
-            String grupo = tokens[2];
+            String grupo = tokens[1];
+            
+            System.out.println("addGroup: " + addGroup +" grupo: "+ grupo);
             
             channel.exchangeDeclare(grupo, "fanout", true);
+            
             System.out.println("Grupo criado: " + grupo);
-            // Cria um grup
         }
         
          // Quando o primeiro char é um sustenido #, deve-se conectar a um grupo
@@ -89,8 +94,10 @@ public class emissor {
             String mensagem = (partes.length > 1) ? partes[1] : "";
 
             String msg = meusuario + "#" + grupo +  " diz: " + mensagem;
+    
             channel.basicPublish(grupo, "", null, msg.getBytes("UTF-8"));
-            // Se conecta ao grupo
+            pilha_de_requisicoes.push(("#"+grupo));
+    
         }
             
         else if (comando.equalsIgnoreCase("/sair")) {

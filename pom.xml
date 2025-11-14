@@ -1,11 +1,16 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  
   <modelVersion>4.0.0</modelVersion>
   <groupId>br.ufs.dcomp.ChatRabbitMQ</groupId>
   <artifactId>ChatRabbitMQ</artifactId>
   <packaging>jar</packaging>
   <version>1.0-SNAPSHOT</version>
   <name>ChatRabbitMQ</name>
+  
   <url>http://maven.apache.org</url>
+  
   <build>
     <plugins>
       <plugin>
@@ -24,10 +29,11 @@
         </configuration>
       </plugin>
     </plugins>
+    
   </build>
   
    <properties>
-    <protobuf.version>3.28.0-rc1</protobuf.version>
+    <protobuf.version>4.33.0</protobuf.version>
     <maven.compiler.source>11</maven.compiler.source>
     <maven.compiler.target>11</maven.compiler.target>
   </properties>

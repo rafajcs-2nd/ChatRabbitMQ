@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package
+
+option java_package = 
+option java_outer_classname = "menssagemProto";
+
+message MensagemUsuario{
+	String msg = 1;
+	String nomeRemetente = 2;
+	String nomeDestinatario = 3;
+    String DataHora = 4;
+}
+
+message mensagemGrupo{
+	String Msg = 1;
+	String NomeGrupo = 2;
+	String NomeRemetente = 3;
+	String NomeDestinatario = 4;
+    String DataHora = 5;
+}

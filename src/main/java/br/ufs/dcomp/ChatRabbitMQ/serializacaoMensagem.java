@@ -1,62 +1,31 @@
 public class serializacaoMenssagem{
 
 
-	public FileOutputStream getSerializaGrupo(int codigoEnvio, String mensagemRecebida, String nomeGrupo, String nomeRemetente, String nomeDestinatario, String dataHorario){
-			ContatoProto.mensagemGrupo grupo = ContatoProto.mensagemGrupo.newBuilder()
-			.setMsg(mensagemRecebida)
-			.setNomeGrupo(nomeGrupo)
-			.setNomeRemetente(nomeRemetente)
-			.setNomeDestinatario(nomeDestinatario)
-			.setDataHora(dataHorario).build();
+	public static FileOutputStream getSerializaGrupo(String emissor, String grupo, String texto) throws Exception {
 
+    MensagemProto.Conteudo conteudo = MensagemProto.Conteudo.newBuilder()
+            .setTipo("text/plain")
+            .setCorpo(ByteString.copyFrom(texto.getBytes()))
+            .setNome("mensagem.txt")
+            .build();
 
-            byte[] buffer = mensagemGrupo.toByteArray();
+    MensagemProto.Mensagem msg = MensagemProto.Mensagem.newBuilder()
+            .setEmissor(emissor)
+            .setData("hoje")
+            .setHora("agora")
+            .setGrupo(grupo)
+            .setConteudo(conteudo)
+            .build();
 
-        // Escrevendo contato já serializado em arquivo
-            FileOutputStream fos = new FileOutputStream(new File("msgGrupo.bin"));
-            fos.write(buffer);
-            fos.close();
-            //System.out.println("Contato escrito em formato binário no arquivo \"aluno.bin\"");
+    byte[] buffer = msg.toByteArray();
 
-            // Mapeando a mensagem para o formato json
-            String json = JsonFormat.printer().print(mensagemGrupo);
+    FileOutputStream fos = new FileOutputStream(new File("msg.bin"));
+    fos.write(buffer);
+    fos.close();
 
-            // Escrita do conteúdo json em arquivo texto
-            fos = new FileOutputStream(new File("msgGrupo.json"));
-            fos.write(json.getBytes());
-            fos.close();
-            //System.out.println("Contato escrito em formato texto/json no arquivo \"msgGrupo.json\"");
+        return fos;
+    }
 
-            return fos;
-	}
-
-    public String getSerializaUsuario(int codigoEnvio, String mensagemRecebida, String nomeRemetente, String nomeDestinatario, String dataHorario){
-			ContatoProto.mensagemUsuario usuario = ContatoProto.mensagemUsuario.newBuilder()
-			.setMsg(mensagemRecebida)
-			.setNomeRemetente(nomeRemetente)
-			.setNomeDestinatario(nomeDestinatario)
-			.setDataHora(dataHorario).build();build();
-
-
-            byte[] buffer = mensagemGrupo.toByteArray();
-
-        // Escrevendo contato já serializado em arquivo
-            FileOutputStream fos = new FileOutputStream(new File("msgUsuario.bin"));
-            fos.write(buffer);
-            fos.close();
-            //System.out.println("Contato escrito em formato binário no arquivo \"aluno.bin\"");
-
-            // Mapeando a mensagem para o formato json
-            String json = JsonFormat.printer().print(mensagemUsuario);
-
-            // Escrita do conteúdo json em arquivo texto
-            fos = new FileOutputStream(new File("msgUsuario.json"));
-            fos.write(json.getBytes());
-            fos.close();
-            //System.out.println("Contato escrito em formato texto/json no arquivo \"msgGrupo.json\"");
-
-            return fos;
-	}
 
 
 }

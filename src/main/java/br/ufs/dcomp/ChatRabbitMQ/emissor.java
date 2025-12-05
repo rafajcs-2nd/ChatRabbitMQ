@@ -39,6 +39,10 @@ public class emissor {
     String destinatario = "";
     String grupo = "";
     String msg = "";
+    
+    FileOutputStream fos = new FileOutputStream(new File("msg.bin"));
+    
+    byte[] body;
 
     while (true) {
     
@@ -88,8 +92,9 @@ public class emissor {
             String[] partes = restoEntrada.split(" ", 2);
             grupo = partes[0];
             String mensagem = (partes.length > 1) ? partes[1] : "";
-
-            msg = meusuario + "#" + grupo +  " diz: " + mensagem;
+            
+            fos = getSerializaGrupo(meusuario, grupo, mensagem);
+           // msg = meusuario + "#" + grupo +  " diz: " + mensagem;
             pilha_de_requisicoes.push(("#"+grupo));
     
         }
@@ -115,7 +120,9 @@ public class emissor {
                 }                
             }
             else if(pilha_de_requisicoes.peek().charAt(0) == '#') {
-                channel.basicPublish(grupo, "", null, msg.getBytes("UTF-8"));
+                body = Files.readAllBytes(Paths.get("msg.bin"));
+                channel.basicPublish(grupo, "", null, body);
+                
             }
         }
        

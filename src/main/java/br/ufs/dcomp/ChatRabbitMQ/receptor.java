@@ -36,13 +36,30 @@ public class receptor {
       public void handleDelivery(String consumerTag, Envelope envelope, 
                                AMQP.BasicProperties properties, byte[] body) throws IOException {
         
-        String mensagem = new String(body, "UTF-8");
+        
+        
+          MensagemProto.Mensagem msg = MensagemProto.Mensagem.parseFrom(body);
+
+          String emissor = msg.getEmissor();
+          String data    = msg.getData();
+          String hora    = msg.getHora();
+          String grupo   = msg.getGrupo();
+
+          MensagemProto.Conteudo c = msg.getConteudo();
+
+          String tipo   = c.getTipo();
+          String nome   = c.getNome();
+          byte[] arquivo = c.getCorpo().toByteArray();
+
+           // Exibe no console
+          String mensagem = emissor + grupo + data + hora;
         //String remetente = envelope.getRoutingKey();
         
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy 'às' HH:mm");
-        String dataHora = sdf.format(new Date());
+        //SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy 'às' HH:mm");
+        //String dataHora = sdf.format(new Date());
         
-        System.out.println("(" + dataHora + ") @" + mensagem);
+        //System.out.println("(" + dataHora + ") @" + mensagem);
+          System.out.println(mensagem);
       }
     };
 

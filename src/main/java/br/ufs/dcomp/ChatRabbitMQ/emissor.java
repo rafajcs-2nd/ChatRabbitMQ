@@ -11,10 +11,11 @@ public class emissor {
   
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("3.229.56.253");
-    factory.setUsername("coelhOS");
-    factory.setPassword("senha");
-    factory.setVirtualHost("/");
+    //factory.setHost("shark.rmq.cloudamqp.com");
+    //factory.setUsername("jtvssape");
+    //factory.setPassword("i4MuhTgXn_97dmaZe9Uz3-WnPsu53HgL");
+    factory.setUri("amqps://jtvssape:i4MuhTgXn_97dmaZe9Uz3-WnPsu53HgL@shark.rmq.cloudamqp.com/jtvssape");
+    //factory.setVirtualHost("/");
   
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();

@@ -45,8 +45,7 @@ public class emissor {
     String grupo = "";
     String msg = "";
     
-    FileOutputStream fos = new FileOutputStream(new File("msg.bin"));
-    
+
     byte[] body;
 
     while (true) {
@@ -71,21 +70,24 @@ public class emissor {
         
         // Quando o primeiro char é uma interrogação !, deve-se criar um grupo
         else if (comando.charAt(0) == '!') {
-            System.out.println("vai criar um grupo");
+            
             String[] tokens = comando.split(" ");
             
             if(tokens[0].equalsIgnoreCase("!addGroup")) {
-                String addGroup = tokens[0];
+                
                 grupo = tokens[1];
-                
-                System.out.println("addGroup: " + addGroup +" grupo: "+ grupo);
-                
                 channel.exchangeDeclare(grupo, "fanout", true);
-                
                 System.out.println("Grupo criado: " + grupo);
             }
-            else {
-                channel.basicPublish("usuarios_direct", tokens[1], null, comando.getBytes("UTF-8"));
+            else if(tokens[0].equalsIgnoreCase("!addUser")){
+                
+                String usuarioParaAdicionar = tokens[1];
+                String nomeDoGrupo = tokens[2];
+                
+                byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, "", comando);
+                
+                channel.basicPublish("usuarios_direct", usuarioParaAdicionar, null, buffer);
+                System.out.println("Convite enviado para " + usuarioParaAdicionar);
             }
         }
         
@@ -98,7 +100,9 @@ public class emissor {
             grupo = partes[0];
             String mensagem = (partes.length > 1) ? partes[1] : "";
             
-            fos = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, mensagem);
+            byte[] buffer  = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, mensagem);
+            
+            channel.basicPublish(grupo, "", null, buffer);
            // msg = meusuario + "#" + grupo +  " diz: " + mensagem;
             pilha_de_requisicoes.push(("#"+grupo));
     
@@ -112,21 +116,19 @@ public class emissor {
         else {
             if(pilha_de_requisicoes.peek().charAt(0) == '@') {
                 if (!destinatario.isEmpty()) {
-                    String mensagem = comando;
-                    String mensagemCompleta = meusuario + " diz: " + mensagem;
-            
-                    // Publica a mensagem no exchange com routing key = destinatário
-                    channel.basicPublish("usuarios_direct", destinatario, null, mensagemCompleta.getBytes("UTF-8"));
-                    pilha_de_requisicoes.push(comando);
-                    continue;
+                    
+                    byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, "", comando);
+                    channel.basicPublish("usuarios_direct", destinatario, null, buffer);
+                    //pilha_de_requisicoes.push(comando); n funciona
+                    
                 } else {
                     System.out.println("Primeiro defina um destinatário com @usuario");
-                    continue;
+                    
                 }                
             }
             else if(pilha_de_requisicoes.peek().charAt(0) == '#') {
-                body = Files.readAllBytes(Paths.get("msg.bin"));
-                channel.basicPublish(grupo, "", null, body);
+                byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, comando);
+                channel.basicPublish(grupo, "", null, buffer);
                 
             }
         }

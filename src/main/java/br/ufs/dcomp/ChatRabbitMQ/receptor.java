@@ -34,34 +34,38 @@ public class receptor {
 
     Consumer consumer = new DefaultConsumer(channel) {
       @Override
-      public void handleDelivery(String consumerTag, Envelope envelope, 
-                               AMQP.BasicProperties properties, byte[] body) throws IOException {
+      public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
         
         
         
           MensagemProto.Mensagem msg = MensagemProto.Mensagem.parseFrom(body);
+          MensagemProto.Conteudo c = msg.getConteudo();
 
           String emissor = msg.getEmissor();
           String data    = msg.getData();
           String hora    = msg.getHora();
           String grupo   = msg.getGrupo();
 
-          MensagemProto.Conteudo c = msg.getConteudo();
-
           String tipo   = c.getTipo();
           String nome   = c.getNome();
           byte[] arquivo = c.getCorpo().toByteArray();
 
-           // Exibe no console
-          String mensagem = emissor + grupo + data + hora;
-        //String remetente = envelope.getRoutingKey();
+          
+          String textoMsg = new String(msg.getConteudo().getCorpo().toByteArray(), "UTF-8");
+          
+          if(textoMsg.startsWith("!addUser")){
+            String[] partes = textoMsg.split(" ");
+            String nomeDoGrupo = partes[2];
+            
+            channel.queueBind(nome_usuario, nomeDoGrupo, "");
+            System.out.print("#" + nomeDoGrupo);
+          }
+          else{
+            String prefixo = grupo.isEmpty() ? "" : " para #" + grupo;
+            System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + " diz: " + textoMsg);
+            System.out.print(nome_usuario + ">> ");
+          }
         
-        //SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy 'às' HH:mm");
-        //String dataHora = sdf.format(new Date());
-        
-        //System.out.println("(" + dataHora + ") @" + mensagem);
-        // TODO implementar a logica de conexao com o grupo para que as mensagens dele sejam exibidas por usuarios 
-        System.out.println(mensagem);
       }
     };
 

@@ -1,6 +1,4 @@
 /home/ubuntu/environment/ChatRabbitMQ/src/main/java/br/ufs/dcomp/ChatRabbitMQ/emissor.java
 /home/ubuntu/environment/ChatRabbitMQ/src/main/java/br/ufs/dcomp/ChatRabbitMQ/serializacaoMensagem.java
-/home/ubuntu/environment/ChatRabbitMQ/src/main/java/br/ufs/dcomp/ChatRabbitMQ/MensagemProto.java
 /home/ubuntu/environment/ChatRabbitMQ/src/main/java/br/ufs/dcomp/ChatRabbitMQ/receptor.java
-/home/ubuntu/environment/ChatRabbitMQ/src/main/java/br/ufs/dcomp/ChatRabbitMQ/Receptor2.java
-/home/ubuntu/environment/ChatRabbitMQ/src/main/java/br/ufs/dcomp/ChatRabbitMQ/Parser.java
+/home/ubuntu/environment/ChatRabbitMQ/src/main/java/br/ufs/dcomp/ChatRabbitMQ/MensagemProto.java

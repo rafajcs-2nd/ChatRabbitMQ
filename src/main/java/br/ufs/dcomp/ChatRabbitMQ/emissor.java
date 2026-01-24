@@ -38,16 +38,12 @@ public class emissor {
     // Empilha os elementos
     pilha_de_requisicoes.push("");
     
-    
     System.out.print("User: ");
     String meusuario = reader.readLine();
     String destinatario = "";
     String grupo = "";
     String msg = "";
     
-
-    byte[] body;
-
     while (true) {
     
         // Pega a ultima requisição da pilha
@@ -61,33 +57,53 @@ public class emissor {
             continue;
         }
         
-        // Quando o primeiro char é um @, deve  
+        // Quando o primeiro char é um @, deve enviar mensagens diretamente ao destinatário  
         if (comando.charAt(0) == '@') {
             // Define o destinatario
             destinatario = comando.substring(1); // Remove o '@'
             pilha_de_requisicoes.push(("@"+destinatario));
         }
         
-        // Quando o primeiro char é uma interrogação !, deve-se criar um grupo
+        // Quando o primeiro char é uma exclamação !, deve-se criar um grupo ou adicionar um usuário
         else if (comando.charAt(0) == '!') {
             
             String[] tokens = comando.split(" ");
             
+            // cria um grupo
             if(tokens[0].equalsIgnoreCase("!addGroup")) {
                 
                 grupo = tokens[1];
                 channel.exchangeDeclare(grupo, "fanout", true);
                 System.out.println("Grupo criado: " + grupo);
             }
+            // adiciona um usuário a um grupo
             else if(tokens[0].equalsIgnoreCase("!addUser")){
                 
                 String usuarioParaAdicionar = tokens[1];
-                String nomeDoGrupo = tokens[2];
+                grupo = tokens[2];
                 
                 byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, "", comando);
                 
                 channel.basicPublish("usuarios_direct", usuarioParaAdicionar, null, buffer);
-                System.out.println("Convite enviado para " + usuarioParaAdicionar);
+                System.out.println("Usuário " + usuarioParaAdicionar + " adicionado a " + grupo);
+            }
+            // remove um grupo
+            else if(tokens[0].equalsIgnoreCase("!removeGroup")) {
+                
+                grupo = tokens[1];
+                System.out.println("Grupo" + grupo + "está sendo excluído!");
+                channel.exchangeDelete(grupo);
+                System.out.println("Grupo excluído: " + grupo);
+                pilha_de_requisicoes.push("");
+            }
+            // adiciona um usuário a um grupo
+            else if(tokens[0].equalsIgnoreCase("!removeUser")){
+                
+                String usuarioParaRemover = tokens[1];
+                grupo = tokens[2];
+                
+                channel.queueUnbind(usuarioParaRemover, grupo, "");
+                System.out.println("Usuário " + usuarioParaRemover + " removido de " + grupo);
             }
         }
         
@@ -102,10 +118,13 @@ public class emissor {
             
             byte[] buffer  = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, mensagem);
             
-            channel.basicPublish(grupo, "", null, buffer);
-           // msg = meusuario + "#" + grupo +  " diz: " + mensagem;
-            pilha_de_requisicoes.push(("#"+grupo));
-    
+            try {
+                channel.basicPublish(grupo, "", null, buffer);
+                pilha_de_requisicoes.push(("#"+grupo));
+            }
+            catch(Exception e) {
+                System.out.println("Erro ao se conectar ao grupo");
+            }
         }
             
         else if (comando.equalsIgnoreCase("/sair")) {
@@ -114,13 +133,15 @@ public class emissor {
         
         // Se o usuario não digitou nenhum comando, começamos a logica 
         else {
+            if(pilha_de_requisicoes.peek().isEmpty()) {
+                continue;
+            }
             if(pilha_de_requisicoes.peek().charAt(0) == '@') {
                 if (!destinatario.isEmpty()) {
                     
                     byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, "", comando);
                     channel.basicPublish("usuarios_direct", destinatario, null, buffer);
-                    //pilha_de_requisicoes.push(comando); n funciona
-                    
+
                 } else {
                     System.out.println("Primeiro defina um destinatário com @usuario");
                     
@@ -128,8 +149,15 @@ public class emissor {
             }
             else if(pilha_de_requisicoes.peek().charAt(0) == '#') {
                 byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, comando);
-                channel.basicPublish(grupo, "", null, buffer);
-                
+                try {
+                    channel.basicPublish(grupo, "", null, buffer);
+                }
+                catch(Exception e) {
+                    System.out.println("Erro ao enviar mensagem. O grupo " +grupo+ " não existe!" );
+                }
+            }
+            else {
+                continue;
             }
         }
        

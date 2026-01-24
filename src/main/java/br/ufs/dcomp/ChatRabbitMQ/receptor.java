@@ -29,7 +29,7 @@ public class receptor {
     channel.queueDeclare(nome_usuario, false, false, false, null);
     channel.queueBind(nome_usuario, "usuarios_direct", nome_usuario);
 
-    System.out.println("🎧 Ouvindo mensagens para: " + nome_usuario);
+    System.out.println("Ouvindo mensagens para: " + nome_usuario);
     System.out.println("----------------------------------------");
 
     Consumer consumer = new DefaultConsumer(channel) {
@@ -58,7 +58,7 @@ public class receptor {
             String nomeDoGrupo = partes[2];
             
             channel.queueBind(nome_usuario, nomeDoGrupo, "");
-            System.out.print("#" + nomeDoGrupo);
+            System.out.println("Você foi adicionado a " + nomeDoGrupo);
           }
           else if(!grupo.isEmpty()){
             System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + "#" + grupo + " diz: " + textoMsg);

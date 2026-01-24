@@ -60,10 +60,13 @@ public class receptor {
             channel.queueBind(nome_usuario, nomeDoGrupo, "");
             System.out.print("#" + nomeDoGrupo);
           }
+          else if(!grupo.isEmpty()){
+            System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + "#" + grupo + " diz: " + textoMsg);
+          }
           else{
             String prefixo = grupo.isEmpty() ? "" : " para #" + grupo;
             System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + " diz: " + textoMsg);
-            System.out.print(nome_usuario + ">> ");
+            
           }
         
       }

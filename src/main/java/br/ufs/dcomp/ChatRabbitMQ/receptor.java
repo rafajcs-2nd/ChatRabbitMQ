@@ -12,10 +12,11 @@ public class receptor {
   
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("3.229.56.253");
-    factory.setUsername("coelhOS");
-    factory.setPassword("senha");
-    factory.setVirtualHost("/");
+    //factory.setHost("3.229.56.253");
+    //factory.setUsername("coelhOS");
+    //factory.setPassword("senha");
+    //factory.setVirtualHost("/");
+    factory.setUri("amqps://jtvssape:i4MuhTgXn_97dmaZe9Uz3-WnPsu53HgL@shark.rmq.cloudamqp.com/jtvssape");
   
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
@@ -59,7 +60,8 @@ public class receptor {
         //String dataHora = sdf.format(new Date());
         
         //System.out.println("(" + dataHora + ") @" + mensagem);
-          System.out.println(mensagem);
+        // TODO implementar a logica de conexao com o grupo para que as mensagens dele sejam exibidas por usuarios 
+        System.out.println(mensagem);
       }
     };
 

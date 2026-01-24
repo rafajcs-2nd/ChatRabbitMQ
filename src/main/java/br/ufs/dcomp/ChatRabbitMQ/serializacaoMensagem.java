@@ -1,4 +1,11 @@
-public class serializacaoMenssagem{
+package br.ufs.dcomp.ChatRabbitMQ;
+
+import java.io.File;
+import java.io.FileOutputStream;
+
+import com.google.protobuf.ByteString;
+
+public class serializacaoMensagem{
 
 
 	public static FileOutputStream getSerializaGrupo(String emissor, String grupo, String texto) throws Exception {

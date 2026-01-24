@@ -3,10 +3,14 @@ package br.ufs.dcomp.ChatRabbitMQ;
 import com.rabbitmq.client.ConnectionFactory;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Channel;
+import br.ufs.dcomp.ChatRabbitMQ.serializacaoMensagem;
 
 import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.InputStreamReader;
-
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
 
@@ -14,10 +18,11 @@ public class emissor {
   
   public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
-    factory.setHost("54.146.215.199");
-    factory.setUsername("coelhOS");
-    factory.setPassword("senha");
-    factory.setVirtualHost("/");
+    //factory.setHost("54.146.215.199");
+    //factory.setUsername("coelhOS");
+    //factory.setPassword("senha");
+    //factory.setVirtualHost("/");
+    factory.setUri("amqps://jtvssape:i4MuhTgXn_97dmaZe9Uz3-WnPsu53HgL@shark.rmq.cloudamqp.com/jtvssape");
   
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
@@ -93,7 +98,7 @@ public class emissor {
             grupo = partes[0];
             String mensagem = (partes.length > 1) ? partes[1] : "";
             
-            fos = getSerializaGrupo(meusuario, grupo, mensagem);
+            fos = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, mensagem);
            // msg = meusuario + "#" + grupo +  " diz: " + mensagem;
             pilha_de_requisicoes.push(("#"+grupo));
     
@@ -132,4 +137,5 @@ public class emissor {
     connection.close();
     reader.close();
   }
+
 }

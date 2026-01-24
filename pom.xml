@@ -19,7 +19,7 @@
           <archive>
             <manifest>
               <mainClass>
-                br.ufs.dcomp.ChatRabbitMQ.emissor
+                br.ufs.dcomp.ChatRabbitMQ.receptor
               </mainClass>
             </manifest>
           </archive>

@@ -84,10 +84,52 @@ public class emissor {
                 String usuarioParaAdicionar = tokens[1];
                 String nomeDoGrupo = tokens[2];
                 
-                byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, "", comando);
+                byte[] buffer = serializacaoMensagem.getSerializa(meusuario, "", comando, null, "", "");
                 
                 channel.basicPublish("usuarios_direct", usuarioParaAdicionar, null, buffer);
                 System.out.println("Convite enviado para " + usuarioParaAdicionar);
+            }
+            else if(tokens[0].equalsIgnoreCase("!upload")){
+                String caminhoArquivo = tokens[1];
+                String destinoAtual = pilha_de_requisicoes.peek();
+                
+                if(destinoAtual.equals("")){
+                    System.out.println("Erro: Defina um destino com @usuario ou #grupo antes de enviar arquivos.");
+                }
+                else {
+                    Thread threadUpload = new Thread(() -> {
+                        try {
+                            File arquivo = new File(caminhoArquivo);
+                                if (arquivo.exists() && !arquivo.isDirectory()) {
+                                    byte[] bytesArquivo = Files.readAllBytes(Paths.get(caminhoArquivo));
+                                    
+                                    System.out.println("\nEnviando \"" + caminhoArquivo + "\" para " + destinoAtual + ".");
+                                    
+                                    String tipoMime = Files.probeContentType(Paths.get(caminhoArquivo));
+                                    
+                                    String nomeGrupo = comando.startsWith("#") ? comando.substring(1) : "";
+                                    byte[] buffer = serializacaoMensagem.getSerializa(meusuario, nomeGrupo, "", bytesArquivo, arquivo.getName(), tipoMime);
+                                    
+                                    
+                                    if(comando.startsWith("@")){
+                                        channel.basicPublish("usuarios_direct", comando.substring(1), null, buffer);
+                                    }
+                                    else if(comando.startsWith("#")){
+                                        channel.basicPublish(comando.substring(1), "", null, buffer);
+                                    }
+                    
+                                    System.out.println("Arquivo \"" + caminhoArquivo + "\" foi enviado para " + destinoAtual + " !");
+                                    System.out.print(pilha_de_requisicoes.peek() + ">> ");
+                                }
+                                else {
+                                    System.out.println("\n[Erro] Arquivo não encontrado: " + caminhoArquivo);
+                                }
+                            } catch (Exception e) {
+                                System.err.println("\n[Erro no Upload] " + e.getMessage());
+                            }});
+                            
+                            threadUpload.start();
+                    }
             }
         }
         
@@ -100,7 +142,9 @@ public class emissor {
             grupo = partes[0];
             String mensagem = (partes.length > 1) ? partes[1] : "";
             
-            byte[] buffer  = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, mensagem);
+            byte[] test;
+            
+            byte[] buffer  = serializacaoMensagem.getSerializa(meusuario, grupo, mensagem, null, "", "");
             
             channel.basicPublish(grupo, "", null, buffer);
            // msg = meusuario + "#" + grupo +  " diz: " + mensagem;
@@ -117,7 +161,7 @@ public class emissor {
             if(pilha_de_requisicoes.peek().charAt(0) == '@') {
                 if (!destinatario.isEmpty()) {
                     
-                    byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, "", comando);
+                    byte[] buffer = serializacaoMensagem.getSerializa(meusuario, "", comando, null, "", "");
                     channel.basicPublish("usuarios_direct", destinatario, null, buffer);
                     //pilha_de_requisicoes.push(comando); n funciona
                     
@@ -127,7 +171,7 @@ public class emissor {
                 }                
             }
             else if(pilha_de_requisicoes.peek().charAt(0) == '#') {
-                byte[] buffer = serializacaoMensagem.getSerializaGrupo(meusuario, grupo, comando);
+                byte[] buffer = serializacaoMensagem.getSerializa(meusuario, grupo, comando, null, "", "");
                 channel.basicPublish(grupo, "", null, buffer);
                 
             }

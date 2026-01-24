@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.io.File;
+import java.io.FileOutputStream;
 
 public class receptor {
   
@@ -35,40 +37,52 @@ public class receptor {
     Consumer consumer = new DefaultConsumer(channel) {
       @Override
       public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body) throws IOException {
-        
-        
-        
           MensagemProto.Mensagem msg = MensagemProto.Mensagem.parseFrom(body);
           MensagemProto.Conteudo c = msg.getConteudo();
-
-          String emissor = msg.getEmissor();
-          String data    = msg.getData();
-          String hora    = msg.getHora();
-          String grupo   = msg.getGrupo();
-
-          String tipo   = c.getTipo();
-          String nome   = c.getNome();
-          byte[] arquivo = c.getCorpo().toByteArray();
-
+  
+          String emissor     = msg.getEmissor();
+          String data        = msg.getData();
+          String hora        = msg.getHora();
+          String grupo       = msg.getGrupo();
+          String nomeArquivo = c.getNome();
+          byte[] dadosArquivo = c.getCorpo().toByteArray();
+  
           
-          String textoMsg = new String(msg.getConteudo().getCorpo().toByteArray(), "UTF-8");
-          
-          if(textoMsg.startsWith("!addUser")){
-            String[] partes = textoMsg.split(" ");
-            String nomeDoGrupo = partes[2];
-            
-            channel.queueBind(nome_usuario, nomeDoGrupo, "");
-            System.out.print("#" + nomeDoGrupo);
-          }
-          else if(!grupo.isEmpty()){
-            System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + "#" + grupo + " diz: " + textoMsg);
+          if (nomeArquivo != null && !nomeArquivo.isEmpty()) {
+              String diretorioDownloads = "/home/ubuntu/environment/ChatRabbitMQ/downloads/";
+              
+              File pastaDownload = new File(diretorioDownloads);
+              if (!pastaDownload.exists()) pastaDownload.mkdirs();
+              
+              File arquivoDestino = new File(diretorioDownloads + nomeArquivo);
+              try (FileOutputStream fos = new FileOutputStream(arquivoDestino)) {
+                  fos.write(dadosArquivo);
+              }
+              
+              
+              System.out.println("\n(" + data + " às " + hora + ") Arquivo \"" + nomeArquivo + "\" recebido de @" + emissor + "!");
+              System.out.print(nome_usuario + ">> ");
           }
           else{
-            String prefixo = grupo.isEmpty() ? "" : " para #" + grupo;
-            System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + " diz: " + textoMsg);
-            
+              String textoMsg = new String(msg.getConteudo().getCorpo().toByteArray(), "UTF-8");
+              
+              if(textoMsg.startsWith("!addUser")){
+                String[] partes = textoMsg.split(" ");
+                String nomeDoGrupo = partes[2];
+                
+                channel.queueBind(nome_usuario, nomeDoGrupo, "");
+                System.out.print("#" + nomeDoGrupo);
+            }
+              
+            else if(!grupo.isEmpty()){
+              System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + "#" + grupo + " diz: " + textoMsg);
+            }
+            else{
+              String prefixo = grupo.isEmpty() ? "" : " para #" + grupo;
+              System.out.println("(" + msg.getData() + " às " + msg.getHora() + ") " + msg.getEmissor() + " diz: " + textoMsg);
+              
+            }
           }
-        
       }
     };
 

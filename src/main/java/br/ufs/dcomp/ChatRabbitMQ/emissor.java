@@ -107,15 +107,15 @@ public class emissor {
                                     
                                     String tipoMime = Files.probeContentType(Paths.get(caminhoArquivo));
                                     
-                                    String nomeGrupo = comando.startsWith("#") ? comando.substring(1) : "";
+                                    String nomeGrupo = destinoAtual.startsWith("#") ? destinoAtual.substring(1) : "";
                                     byte[] buffer = serializacaoMensagem.getSerializa(meusuario, nomeGrupo, "", bytesArquivo, arquivo.getName(), tipoMime);
                                     
                                     
-                                    if(comando.startsWith("@")){
-                                        channel.basicPublish("usuarios_direct", comando.substring(1), null, buffer);
+                                    if(destinoAtual.startsWith("@")){
+                                        channel.basicPublish("usuarios_direct", destinoAtual.substring(1), null, buffer);
                                     }
-                                    else if(comando.startsWith("#")){
-                                        channel.basicPublish(comando.substring(1), "", null, buffer);
+                                    else if(destinoAtual.startsWith("#")){
+                                        channel.basicPublish(destinoAtual.substring(1), "", null, buffer);
                                     }
                     
                                     System.out.println("Arquivo \"" + caminhoArquivo + "\" foi enviado para " + destinoAtual + " !");

@@ -13,30 +13,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayDeque;
 import java.util.Deque;
+import java.util.List;
 
 
 public class emissorQuarta {
     public static void main(String[] argv) throws Exception {
         ConnectionFactory factory = new ConnectionFactory();
         
-        // --- CONFIGURAÇÃO PARA O LOAD BALANCER AWS ---
-        
-        // Substitua pelo DNS do seu Network Load Balancer da AWS
-        factory.setHost("LB-AMQP-b46d593355380fcf.elb.us-east-1.amazonaws.com");
-        
-        // Porta padrão do listener AMQP no Load Balancer
-        factory.setPort(5672);
-        
-        // Credenciais (Recomenda-se usar variáveis de ambiente ou arquivo de config em produção)
-        factory.setUsername("admin");
-        factory.setPassword("admin");
-        
-        // Virtual Host (O padrão é "/")
-        factory.setVirtualHost("/"); 
-
-        // CRÍTICO PARA AWS:
-        // Mantém a conexão TCP ativa para evitar que o Load Balancer a encerre por inatividade
-        factory.setRequestedHeartbeat(30); 
+        // URI completa do CloudAMQP (Usuario:Senha@Host/VHost)
+        factory.setUri("amqps://qynhcgcj:PpmRlIuA8oSOCN2wHCSP4R9dJf99WIJU@shark.rmq.cloudamqp.com/qynhcgcj");
         
         // CRÍTICO PARA ALTA DISPONIBILIDADE:
         // Permite reconexão automática caso um nó do cluster falhe
@@ -66,7 +51,6 @@ public class emissorQuarta {
         String destinatario = "";
         String grupo = "";
         //String msg = "";
-        
 
         byte[] body;
 
@@ -96,11 +80,18 @@ public class emissorQuarta {
                 String[] tokens = comando.split(" ");
                 
                 if(tokens[0].equalsIgnoreCase("!addGroup")) {
-                    
                     grupo = tokens[1];
+
                     // Criação do Exchange para o grupo (Fanout)
                     channel.exchangeDeclare(grupo, "fanout", true);
-                    System.out.println("Grupo criado: " + grupo);
+
+                    // Se você não rodou o Receptor ainda, isso cria a fila agora para não dar erro.
+                    // (Os parâmetros false, false, false, null DEVEM ser iguais aos do Receptor)
+                    channel.queueDeclare(meusuario, false, false, false, null);
+
+                    // Faz a amarração da fila do usuário atual (meusuario) com o grupo
+                    channel.queueBind(meusuario, grupo, "");
+                    System.out.println("Grupo criado e você (" + meusuario + ") foi adicionado a ele: " + grupo);
                 }
                 else if(tokens[0].equalsIgnoreCase("!addUser")){
                     
@@ -113,6 +104,33 @@ public class emissorQuarta {
                     channel.basicPublish("usuarios_direct", usuarioParaAdicionar, null, buffer);
                     System.out.println("Convite enviado para " + usuarioParaAdicionar);
                 }
+                else if(tokens[0].equalsIgnoreCase("!listGroups")){
+                    System.out.println("Buscando grupos...");
+                    // Chama a classe auxiliar passando o usuario atual
+                    List<String> grupos = GerenciadorGrupo.listarGruposDoUsuario(meusuario);
+                    
+                    if (grupos.isEmpty()) {
+                        System.out.println("Nenhum grupo encontrado.");
+                    } else {
+                        // Junta a lista numa string separada por virgula
+                        System.out.println("Grupos: " + String.join(", ", grupos));
+                    }
+                }
+                else if(tokens[0].equalsIgnoreCase("!listUsers")){
+                    if(tokens.length < 2) {
+                        System.out.println("Uso: !listUsers <nome_grupo>");
+                    } else {
+                        String nomeGrupo = tokens[1];
+                        System.out.println("Buscando usuários de " + nomeGrupo + "...");
+                        List<String> users = GerenciadorGrupo.listarUsuariosDoGrupo(nomeGrupo);
+                        
+                        if (users.isEmpty()) {
+                            System.out.println("Nenhum usuário encontrado neste grupo.");
+                        } else {
+                            System.out.println("Usuários: " + String.join(", ", users));
+                        }
+                    }
+                }
                 else if(tokens[0].equalsIgnoreCase("!upload")){
                     String caminhoArquivo = tokens[1];
                     String destinoAtual = pilha_de_requisicoes.peek();
@@ -121,6 +139,7 @@ public class emissorQuarta {
                         System.out.println("Erro: Defina um destino com @usuario ou #grupo antes de enviar arquivos.");
                     }
                     else {
+
                         Thread threadUpload = new Thread(() -> {
                             try {
                                 File arquivo = new File(caminhoArquivo);
@@ -130,10 +149,9 @@ public class emissorQuarta {
                                         System.out.println("\nA enviar \"" + caminhoArquivo + "\" para " + destinoAtual + ".");
                                         
                                         String tipoMime = Files.probeContentType(Paths.get(caminhoArquivo));
-                                        
                                         String nomeGrupo = comando.startsWith("#") ? comando.substring(1) : "";
+
                                         byte[] buffer = serializacaoMensagem.getSerializa(meusuario, nomeGrupo, "", bytesArquivo, arquivo.getName(), tipoMime);
-                                        
                                         
                                         if(comando.startsWith("@")){
                                             channel.basicPublish("usuarios_direct", comando.substring(1), null, buffer);
@@ -160,18 +178,18 @@ public class emissorQuarta {
             // Quando o primeiro char é um cardinal #, deve-se conectar a um grupo
             else if (comando.charAt(0) == '#') {
                 String restoEntrada = comando.substring(1).trim(); // remove o #
-                
-            
                 String[] partes = restoEntrada.split(" ", 2);
                 grupo = partes[0];
-                String mensagem = (partes.length > 1) ? partes[1] : "";
-                
-                // Serializa com Protobuf
-                byte[] buffer  = serializacaoMensagem.getSerializa(meusuario, grupo, mensagem, null, "", "");
-                
-                channel.basicPublish(grupo, "", null, buffer);
+
+                // Atualiza o contexto (pilha) SEMPRE (para aparecer #grupo>> no prompt)
                 pilha_de_requisicoes.push(("#"+grupo));
-        
+                
+                // Só envia mensagem para o RabbitMQ se o usuário digitou algo além do nome do grupo
+                if(partes.length > 1 && !partes[1].trim().isEmpty()) {
+                    String mensagem = (partes.length > 1) ? partes[1] : "";
+                    byte[] buffer  = serializacaoMensagem.getSerializa(meusuario, grupo, mensagem, null, "", "");  
+                    channel.basicPublish(grupo, "", null, buffer);
+                }
             }
                 
             else if (comando.equalsIgnoreCase("/sair")) {

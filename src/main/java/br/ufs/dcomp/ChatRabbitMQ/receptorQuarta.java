@@ -9,25 +9,16 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.util.List;
 
 public class receptorQuarta {
   
 public static void main(String[] argv) throws Exception {
     ConnectionFactory factory = new ConnectionFactory();
     
-    // --- CONFIGURAÇÃO AWS LOAD BALANCER ---
-    
-    // Coloque aqui o DNS do seu Load Balancer (ex: meu-lb-123.elb.us-east-1.amazonaws.com)
-    factory.setHost("LB-AMQP-b46d593355380fcf.elb.us-east-1.amazonaws.com");
-    factory.setPort(5672);
-    
-    // Usuário Admin que criamos via terminal
-    factory.setUsername("admin");
-    factory.setPassword("admin");
-    factory.setVirtualHost("/");
-    
-    // CRÍTICO: Mantém o canal TCP vivo através do Load Balancer
-    factory.setRequestedHeartbeat(30); 
+    // URI completa do CloudAMQP (Usuario:Senha@Host/VHost)
+    factory.setUri("amqps://qynhcgcj:PpmRlIuA8oSOCN2wHCSP4R9dJf99WIJU@shark.rmq.cloudamqp.com/qynhcgcj");
+ 
     
     // CRÍTICO: Se o Load Balancer te jogar para outro nó, ele reconecta sozinho
     factory.setAutomaticRecoveryEnabled(true);
@@ -47,8 +38,7 @@ public static void main(String[] argv) throws Exception {
     channel.exchangeDeclare("usuarios_direct", "direct", true);
 
     // Declaração da Fila
-    // IMPORTANTE: Como não conseguimos fazer o Cluster (Join), usamos filas simples (null nos argumentos)
-    // Isso evita erros de "Feature Flag" ou inconsistência entre nós isolados.
+    // Mantemos 'null' nos argumentos para criar uma fila Clássica (padrão e robusta)
     channel.queueDeclare(nome_usuario, false, false, false, null);
     
     // Faz o Bind (Amarração) da fila com o Exchange
@@ -75,7 +65,7 @@ public static void main(String[] argv) throws Exception {
       
              // Lógica de Recebimento de Arquivo
              if (nomeArquivo != null && !nomeArquivo.isEmpty()) {
-                 String diretorioDownloads = "/home/ubuntu/environment/ChatRabbitMQ/downloads/";
+                 String diretorioDownloads = "downloads/";
                  
                  File pastaDownload = new File(diretorioDownloads);
                  if (!pastaDownload.exists()) pastaDownload.mkdirs();
@@ -89,15 +79,21 @@ public static void main(String[] argv) throws Exception {
                  System.out.print(nome_usuario + ">> ");
              }
              else {
-                 // Lógica de Mensagem de Texto
+                 // Lógica de texto
                  String textoMsg = new String(msg.getConteudo().getCorpo().toByteArray(), "UTF-8");
+
+                 // Ignora mensagens vazias
+                 if (textoMsg.trim().isEmpty()) {
+                     return;
+                 }
                  
                  // Lógica de adicionar ao grupo (!addUser)
                  if(textoMsg.startsWith("!addUser")){
                     String[] partes = textoMsg.split(" ");
                     // Formato esperado: !addUser usuario nomeGrupo
-                    if (partes.length >= 3) {
-                        String nomeDoGrupo = partes[2];
+                    if (partes.length >= 2) {
+                        // O usuarioNome é este receptor, então pegamos o grupo (índice 2)
+                        String nomeDoGrupo = partes.length > 2 ? partes[2] : partes[1];
                         
                         // O receptor faz o bind da sua própria fila ao Exchange do grupo
                         channel.exchangeDeclare(nomeDoGrupo, "fanout", true); // Garante que existe
